@@ -347,7 +347,8 @@ function applyExclusions(pats){
   if(nm.has('清龍')||nm.has('清龍（暗）'))['清步高','清步高（暗）','雜步高','連環套'].forEach(n=>ex.add(n));
   if(nm.has('坎坎糊')||nm.has('對對糊'))['平糊','大平糊','一般高','雙般高','四般高','相逢','三相逢','一色三同順','一色四同順','清龍','清龍（暗）','雜龍','雜龍（暗）','清步高','清步高（暗）','雜步高','老少上'].forEach(n=>ex.add(n));
   if(nm.has('大三兄弟'))['小三兄弟','二兄弟'].forEach(n=>ex.add(n));if(nm.has('大三姊妹'))ex.add('小三姊妹');if(nm.has('大五門'))ex.add('小五門');
-  return pats.filter(p=>!ex.has(p.n));
+  const seen=new Set();
+  return pats.filter(p=>!ex.has(p.n)&&!seen.has(p.n)&&seen.add(p.n));
 }
 function baseChips(ctx,extra=[]){
   const{winMode,specials,zheng,lan,isDealer,lianzhuang,minggang,angang}=ctx;
