@@ -55,7 +55,7 @@ header p{font-size:.68rem;color:var(--muted);margin-top:2px}
 .pt.off{opacity:.2;pointer-events:none;filter:grayscale(1)}
 .pt.pk .tile-img{outline:3px solid var(--gold);outline-offset:1px;border-radius:3px}
 .ht{width:46px;height:62px}
-.ht::after{content:'✕';position:absolute;top:-7px;right:-7px;background:#e74c3c;color:#fff;font-size:.52rem;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4);pointer-events:none;z-index:2}
+.ht-del{position:absolute;top:-7px;right:-7px;background:#e74c3c;color:#fff;font-size:.52rem;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4);border:0;padding:0;cursor:pointer;z-index:2}
 .ht.wt .tile-img{outline:3px solid var(--gold);outline-offset:1px;filter:brightness(1.06) drop-shadow(0 0 5px rgba(212,160,23,.8));border-radius:3px}
 .ht.wt::before{content:'胡';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--gold);color:#2c1a00;font-size:.48rem;font-weight:900;padding:1px 5px;border-radius:3px;z-index:2;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none}
 .ht.wt::after{display:none}
@@ -266,7 +266,7 @@ function removeTile(i){hand.splice(i,1);if(winIdx===i)winIdx=null;else if(winIdx
 function delLast(){if(hand.length)removeTile(hand.length-1)}
 function clearHand(){hand=[];winIdx=null;render()}
 function render(){const n=need();updateHandCountUI();renderHand();renderPicker();renderWinSel();updateBtn();document.getElementById('st3').className='step'+(hand.length===n?' done':' active')}
-function renderHand(){const box=document.getElementById('handBox');if(!hand.length){box.innerHTML='<div class="hempty">請在下方點選手牌</div>';return}box.innerHTML=hand.map((id,i)=>`<div class="tile-wrap ht${winIdx===i?' wt':''}" onclick="removeTile(${i})">${tI(id)}</div>`).join('')}
+function renderHand(){const box=document.getElementById('handBox');if(!hand.length){box.innerHTML='<div class="hempty">請在下方點選手牌</div>';return}box.innerHTML=hand.map((id,i)=>`<div class="tile-wrap ht${winIdx===i?' wt':''}" onclick="removeTile(${i})">${tI(id)}<button class="ht-del" type="button" aria-label="取消選擇" onclick="event.stopPropagation();removeTile(${i})">✕</button></div>`).join('')}
 function renderWinSel(){const sel=document.getElementById('winSel'),n=need();if(hand.length!==n){sel.style.display='none';return}sel.style.display='block';document.getElementById('winTiles').innerHTML=[...new Set(hand)].map(id=>{const isSel=winIdx!==null&&hand[winIdx]===id;return `<div class="ws${isSel?' sel':''}" onclick="setWinTile(${id})">${tileImg(id)}</div>`}).join('')}
 function setWinTile(tid){const idx=hand.lastIndexOf(tid);winIdx=(winIdx!==null&&hand[winIdx]===tid)?null:idx;renderHand();renderWinSel()}
 function renderPicker(){const all=getTotalCnts(),n=need(),full=hand.length>=n,picking=addingMeld==='chow'?new Set(meldBuf):null;[[0,9,'rM'],[9,18,'rP'],[18,27,'rS'],[27,34,'rH']].forEach(([from,to,rowId])=>{document.getElementById(rowId).innerHTML=TI.slice(from,to).map(t=>{const c=all[t.id],off=(c>=4||full)?'off':'',pkCls=picking&&picking.has(t.id)?'pk':'';return `<div class="tile-wrap pt ${off} ${pkCls}" onclick="addTile(${t.id})">${tI(t.id)}<span class="bdg${c>0?' u':''}">${c}/4</span></div>`}).join('')})}
