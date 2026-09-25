@@ -6,7 +6,7 @@ Standalone browser-based calculator for a 17-tile Hong Kong-style Taiwanese Mahj
 
 Open [`index.html`](index.html) in a modern web browser. No build step, server, or external dependency is required.
 
-GitHub Pages is not enabled because the current GitHub plan does not support Pages for this private repository.
+Launch the web app: [港式台灣麻雀計番器](https://velqora-731.github.io/hk-tw-mahjong-calculator/)
 
 The calculator supports hand entry, exposed melds, winning-tile selection, configurable scoring conditions, automatic pattern detection, and payment calculations.
 
