@@ -225,17 +225,17 @@ let hand=[],winIdx=null,openMelds=[],addingMeld=null,meldBuf=[];
 let seatWind=0,roundWind=0,winMode='zimo',isDealer=true,lianzhuang=0;
 let zheng=0,lan=0,minggang=0,angang=0,weimoN=2,betAmt=10,fanRateAmt=2;
 let specials=new Set();
-function setSeat(i){seatWind=i;document.querySelectorAll('#seatSeg .sbtn').forEach((b,j)=>b.classList.toggle('on',j===i))}
-function setRound(i){roundWind=i;document.querySelectorAll('#roundSeg .sbtn').forEach((b,j)=>b.classList.toggle('on',j===i))}
-function setWin(m){winMode=m;document.getElementById('mZ').classList.toggle('on',m==='zimo');document.getElementById('mF').classList.toggle('on',m==='discard')}
-function setDealer(v){isDealer=v;document.getElementById('dlrY').classList.toggle('on',v);document.getElementById('dlrN').classList.toggle('on',!v);if(!v){lianzhuang=0;updateLZUI()}}
-function chgLZ(d){if(!isDealer)return;lianzhuang=Math.max(0,Math.min(12,lianzhuang+d));updateLZUI()}
+function setSeat(i){seatWind=i;document.querySelectorAll('#seatSeg .sbtn').forEach((b,j)=>b.classList.toggle('on',j===i));refreshCalculation()}
+function setRound(i){roundWind=i;document.querySelectorAll('#roundSeg .sbtn').forEach((b,j)=>b.classList.toggle('on',j===i));refreshCalculation()}
+function setWin(m){winMode=m;document.getElementById('mZ').classList.toggle('on',m==='zimo');document.getElementById('mF').classList.toggle('on',m==='discard');refreshCalculation()}
+function setDealer(v){isDealer=v;document.getElementById('dlrY').classList.toggle('on',v);document.getElementById('dlrN').classList.toggle('on',!v);if(!v){lianzhuang=0;updateLZUI()}refreshCalculation()}
+function chgLZ(d){if(!isDealer)return;lianzhuang=Math.max(0,Math.min(12,lianzhuang+d));updateLZUI();refreshCalculation()}
 function updateLZUI(){const dc=document.getElementById('lzDice');dc.textContent=lianzhuang;dc.style.color=lianzhuang>0?'#c0392b':'#333';document.getElementById('lzDesc').textContent=lianzhuang===0?'新莊（+1番）':`連${lianzhuang}（+${1+lianzhuang*2}番）`}
-function chgBet(d){betAmt=Math.max(5,betAmt+d);document.getElementById('betVal').textContent=betAmt}
-function chgFan(d){fanRateAmt=Math.max(1,fanRateAmt+d);document.getElementById('fanVal').textContent=fanRateAmt}
-function chg(f,d){if(f==='zh')zheng=Math.max(0,Math.min(4,zheng+d));else lan=Math.max(0,Math.min(4,lan+d));document.getElementById('zhV').textContent=zheng;document.getElementById('laV').textContent=lan}
-function chgGang(t,d){if(t==='m')minggang=Math.max(0,Math.min(4,minggang+d));else angang=Math.max(0,Math.min(4,angang+d));document.getElementById('mgVal').textContent=minggang;document.getElementById('agVal').textContent=angang}
-function chgWeimo(d){weimoN=Math.max(2,Math.min(10,weimoN+d));document.getElementById('weimoVal').textContent=weimoN;document.getElementById('weimoDesc').textContent=`+${10*(weimoN-1)}番`}
+function chgBet(d){betAmt=Math.max(5,betAmt+d);document.getElementById('betVal').textContent=betAmt;refreshCalculation()}
+function chgFan(d){fanRateAmt=Math.max(1,fanRateAmt+d);document.getElementById('fanVal').textContent=fanRateAmt;refreshCalculation()}
+function chg(f,d){if(f==='zh')zheng=Math.max(0,Math.min(4,zheng+d));else lan=Math.max(0,Math.min(4,lan+d));document.getElementById('zhV').textContent=zheng;document.getElementById('laV').textContent=lan;refreshCalculation()}
+function chgGang(t,d){if(t==='m')minggang=Math.max(0,Math.min(4,minggang+d));else angang=Math.max(0,Math.min(4,angang+d));document.getElementById('mgVal').textContent=minggang;document.getElementById('agVal').textContent=angang;refreshCalculation()}
+function chgWeimo(d){weimoN=Math.max(2,Math.min(10,weimoN+d));document.getElementById('weimoVal').textContent=weimoN;document.getElementById('weimoDesc').textContent=`+${10*(weimoN-1)}番`;refreshCalculation()}
 function togSp(id){
   const lg=['tianding','diding','rending','tianhu','dihu','renhu'],sg=['shuang','san'];
   if(lg.includes(id)&&!specials.has(id))lg.filter(x=>x!==id).forEach(x=>specials.delete(x));
@@ -243,6 +243,7 @@ function togSp(id){
   specials.has(id)?specials.delete(id):specials.add(id);
   ['ding','mendun','yifa','duidpeng','jiadu','dudu','banqiu','quanqiu','haidi','huamo','gangmo','qianggang','gangshang','huashang','weimo','shuang','san','tianding','diding','rending','tianhu','dihu','renhu','yitaicao','yitaihua','qiqiangyi','liangta','zhui','zhuizhong','zhahu','jcp'].forEach(s=>document.getElementById('sp-'+s)?.classList.toggle('on',specials.has(s)));
   document.getElementById('weimoRow').style.display=specials.has('weimo')?'flex':'none';
+  refreshCalculation();
 }
 function tileImg(id){const t=TI[id],alt=t.full||(t.rank+['萬','筒','條'][['m','p','s'].indexOf(t.suit)]);return `<img class="tile-img" src="${TILE_IMG_DATA[id]}" alt="${alt}" draggable="false">`}
 function tI(id){return tileImg(id)}
@@ -271,18 +272,19 @@ function renderWinSel(){const sel=document.getElementById('winSel'),n=need();if(
 function setWinTile(tid){const idx=hand.lastIndexOf(tid);winIdx=(winIdx!==null&&hand[winIdx]===tid)?null:idx;renderHand();renderWinSel();updateBtn()}
 function renderPicker(){const all=getTotalCnts(),n=need(),full=hand.length>=n,picking=addingMeld==='chow'?new Set(meldBuf):null;[[0,9,'rM'],[9,18,'rP'],[18,27,'rS'],[27,34,'rH']].forEach(([from,to,rowId])=>{document.getElementById(rowId).innerHTML=TI.slice(from,to).map(t=>{const c=all[t.id],off=(c>=4||full)?'off':'',pkCls=picking&&picking.has(t.id)?'pk':'';return `<div class="tile-wrap pt ${off} ${pkCls}" onclick="addTile(${t.id})">${tI(t.id)}<span class="bdg${c>0?' u':''}">${c}/4</span></div>`}).join('')})}
 function updateBtn(){const total=hand.length+openMelds.length*3,complete=total===17&&hand.length===need()&&winIdx!==null;document.getElementById('btnCalc').disabled=!complete;if(!complete){document.getElementById('cardResult').style.display='none';document.getElementById('btnReset').style.display='none'}else if(document.getElementById('cardResult').style.display==='none'){doCalc()}}
+function refreshCalculation(){const complete=hand.length+openMelds.length*3===17&&hand.length===need()&&winIdx!==null;if(complete)doCalc();else updateBtn()}
 function findAllDecomps(tiles,openMelds=[]){const needed=17-openMelds.length*3;if(tiles.length!==needed)return[];const results=[],cnts=new Array(34).fill(0),meldCount=5-openMelds.length;tiles.forEach(t=>cnts[t]++);for(let p=0;p<34;p++){if(cnts[p]<2)continue;cnts[p]-=2;_solve(cnts.slice(),[],meldCount,p,results);cnts[p]+=2}const seen=new Set();return results.filter(r=>{const k=r.pair+':'+r.melds.map(m=>m.type[0]+m.tiles[0]).sort().join('|');if(seen.has(k))return false;seen.add(k);return true}).map(r=>({pair:r.pair,melds:[...openMelds.map(m=>({type:m.type,tiles:[...m.tiles]})),...r.melds]}))}
 function _solve(cnts,melds,n,pair,out){if(n===0){if(cnts.every(c=>c===0))out.push({pair,melds:melds.map(m=>({type:m.type,tiles:[...m.tiles]}))});return}const f=cnts.findIndex(c=>c>0);if(f<0)return;if(cnts[f]>=3){cnts[f]-=3;melds.push({type:'pung',tiles:[f,f,f]});_solve(cnts,melds,n-1,pair,out);melds.pop();cnts[f]+=3}if(f<27){const s=Math.floor(f/9),b=f+1,c2=f+2;if(b<(s+1)*9&&c2<(s+1)*9&&cnts[b]>0&&cnts[c2]>0){cnts[f]--;cnts[b]--;cnts[c2]--;melds.push({type:'chow',tiles:[f,b,c2]});_solve(cnts,melds,n-1,pair,out);melds.pop();cnts[f]++;cnts[b]++;cnts[c2]++}}}
-function findQidui(tiles,om=[],angangCount=0){if(tiles.length!==17||om.length>0||angangCount>0)return null;const c=new Array(34).fill(0);tiles.forEach(t=>c[t]++);let tr=0,pr=0,ok=true;for(let i=0;i<34;i++){if(c[i]===3)tr++;else if(c[i]===2)pr++;else if(c[i]!==0)ok=false}return(ok&&tr===1&&pr===7)?{type:'qidui'}:null}
-function findShisan(tiles,om){if(tiles.length!==17||om.length>0)return null;const yaos=[0,8,9,17,18,26,27,28,29,30,31,32,33],c=new Array(34).fill(0);tiles.forEach(t=>c[t]++);if(!yaos.every(y=>c[y]>=1))return null;const pY=yaos.filter(y=>c[y]===2);if(pY.length!==1)return null;const rem=c.slice();yaos.forEach(y=>rem[y]-=(y===pY[0]?2:1));const rt=[];for(let i=0;i<34;i++)for(let j=0;j<rem[i];j++)rt.push(i);if(rt.length!==3)return null;if(rt[0]===rt[1]&&rt[1]===rt[2])return{type:'shisan'};const s=[...rt].sort((a,b)=>a-b);return(!TI[s[0]].honor&&Math.floor(s[0]/9)===Math.floor(s[2]/9)&&s[0]+1===s[1]&&s[1]+1===s[2])?{type:'shisan'}:null}
-function findShiliubuta(tiles,om=[]){if(tiles.length!==17||om.length>0)return null;const c=new Array(34).fill(0);tiles.forEach(t=>c[t]++);const honors=[27,28,29,30,31,32,33];if(!honors.every(h=>c[h]>=1))return null;const pH=honors.filter(h=>c[h]===2);if(pH.length!==1||honors.some(h=>c[h]>=3))return null;for(let s=0;s<3;s++){const ts=[];for(let r=0;r<9;r++)for(let j=0;j<c[s*9+r];j++)ts.push(r);if(ts.length!==3)return null;if(ts.some(r=>c[s*9+r]>1))return null;const sv=[...ts].sort((a,b)=>a-b);if(sv[0]+1===sv[1]&&sv[1]+1===sv[2])return null}return{type:'shiliubuta'}}
+function findQidui(tiles,om=[],minggangCount=0,angangCount=0){if(tiles.length!==17||om.length>0||minggangCount>0||angangCount>0)return null;const c=new Array(34).fill(0);tiles.forEach(t=>c[t]++);let tr=0,pr=0,ok=true;for(let i=0;i<34;i++){if(c[i]===3)tr++;else if(c[i]===2)pr++;else if(c[i]!==0)ok=false}return(ok&&tr===1&&pr===7)?{type:'qidui'}:null}
+function findShisan(tiles,om=[],minggangCount=0,angangCount=0){if(tiles.length!==17||om.length>0||minggangCount>0||angangCount>0)return null;const yaos=[0,8,9,17,18,26,27,28,29,30,31,32,33],c=new Array(34).fill(0);tiles.forEach(t=>c[t]++);if(!yaos.every(y=>c[y]>=1))return null;const pY=yaos.filter(y=>c[y]===2);if(pY.length!==1)return null;const rem=c.slice();yaos.forEach(y=>rem[y]-=(y===pY[0]?2:1));const rt=[];for(let i=0;i<34;i++)for(let j=0;j<rem[i];j++)rt.push(i);if(rt.length!==3)return null;if(rt[0]===rt[1]&&rt[1]===rt[2])return{type:'shisan'};const s=[...rt].sort((a,b)=>a-b);return(!TI[s[0]].honor&&Math.floor(s[0]/9)===Math.floor(s[2]/9)&&s[0]+1===s[1]&&s[1]+1===s[2])?{type:'shisan'}:null}
+function findShiliubuta(tiles,om=[],minggangCount=0,angangCount=0){if(tiles.length!==17||om.length>0||minggangCount>0||angangCount>0)return null;const c=new Array(34).fill(0);tiles.forEach(t=>c[t]++);const honors=[27,28,29,30,31,32,33];if(!honors.every(h=>c[h]>=1))return null;const pH=honors.filter(h=>c[h]===2);if(pH.length!==1||honors.some(h=>c[h]>=3))return null;for(let s=0;s<3;s++){const ts=[];for(let r=0;r<9;r++)for(let j=0;j<c[s*9+r];j++)ts.push(r);if(ts.length!==3)return null;if(ts.some(r=>c[s*9+r]>1))return null;const sv=[...ts].sort((a,b)=>a-b);if(sv[0]+1===sv[1]&&sv[1]+1===sv[2])return null}return{type:'shiliubuta'}}
 function detectPats(decomp,om,ctx){
-  const{pair,melds}=decomp,{seatWind,roundWind,winMode,specials,zheng,lan,isDealer,lianzhuang,minggang,angang}=ctx;
+  const{pair,melds}=decomp,{seatWind,roundWind,winMode,specials,zheng,lan,isDealer,lianzhuang,minggang,angang,winTile}=ctx;
   const pats=[],add=(n,f,auto=true)=>pats.push({n,f,auto});
   const all=[...melds.flatMap(m=>m.tiles),pair,pair],pungs=melds.filter(m=>m.type==='pung'),chows=melds.filter(m=>m.type==='chow');
   const isMQ=om.length===0&&minggang===0&&angang===0;
   const openPungs=pungs.filter(p=>om.some(o=>o.type==='pung'&&o.tiles[0]===p.tiles[0]));
-  const closedPungs=pungs.filter(p=>!om.some(o=>o.type==='pung'&&o.tiles[0]===p.tiles[0]));
+  const closedPungs=pungs.filter(p=>!om.some(o=>o.type==='pung'&&o.tiles[0]===p.tiles[0])&&!(winMode==='discard'&&p.tiles.includes(winTile)));
   const hasHonor=all.some(t=>TI[t].honor),suits=new Set(all.filter(t=>!TI[t].honor).map(t=>TI[t].suit)),pairT=TI[pair];
   if(isDealer){const ex=1+lianzhuang*2;add(lianzhuang>0?`連${lianzhuang}（+${ex}番）`:`做莊（+1番）`,ex,false)}
   if(winMode==='zimo'){if(isMQ)add('門清自摸',5,false);else add('自摸',1,false)}else if(isMQ)add('門清',3,false);
@@ -357,7 +359,7 @@ function baseChips(ctx,extra=[]){
   if(winMode==='zimo')add('自摸',1);const tf=zheng+lan;if(tf===0)add('無花',1);if(zheng>0)add(`正花×${zheng}`,zheng);if(lan>0)add(`爛花×${lan}`,lan);
   if(zheng===4&&lan===0)add('一台花',10);if(zheng===4&&lan===4)add('兩台花',40);
   if(minggang>0)add(`明槓×${minggang}`,minggang);if(angang>0)add(`暗槓×${angang}`,angang*2);
-  const spMap={ding:['叮',5],mendun:['門叮',10],yifa:['一發',5],haidi:['海底',10],huamo:['花摸',2],gangmo:['槓摸',5],qianggang:['搶槓食胡',10],shuang:['雙響',5],san:['三響',10],tianding:['天叮',40],diding:['地叮',30],rending:['人叮',20],tianhu:['天糊',120],dihu:['地糊',120],renhu:['人糊',80]};
+  const spMap={ding:['叮',5],mendun:['門叮',10],yifa:['一發',5],haidi:['海底',10],huamo:['花摸',2],gangmo:['槓摸',5],qianggang:['搶槓食胡',10],gangshang:['槓上自摸',5],huashang:['花上自摸',2],shuang:['雙響',5],san:['三響',10],tianding:['天叮',40],diding:['地叮',30],rending:['人叮',20],tianhu:['天糊',120],dihu:['地糊',120],renhu:['人糊',80]};
   for(const[k,[n,f]]of Object.entries(spMap))if(specials.has(k))add(n,f);
   if(specials.has('weimo'))add(`尾牌連摸`,10*(weimoN-1));
   extra.forEach(([n,f])=>add(n,f,true));return pats;
@@ -368,9 +370,9 @@ function doCalc(){
   const tiles=[...hand,...openMelds.flatMap(m=>m.tiles)];const rb=document.getElementById('resultBody');
   if(tiles.length!==17){rb.innerHTML='<div class="res-fail"><div class="fail-msg">⚠️ 牌張數不對（需共17張）</div></div>';showRes();return}
   let best=null;
-  const qidui=findQidui(hand,openMelds,angang);if(qidui){const p=baseChips(ctx,[['嚦咕嚦咕',40]]),t=p.reduce((s,x)=>s+x.f,0);if(!best||t>best.total)best={pats:p,total:t,special:'嚦咕嚦咕'}}
-  const shisan=findShisan(tiles,openMelds);if(shisan){const p=baseChips(ctx,[['十三么',120]]),t=p.reduce((s,x)=>s+x.f,0);if(!best||t>best.total)best={pats:p,total:t,special:'十三么'}}
-  const slbt=findShiliubuta(hand,openMelds);if(slbt){const p=baseChips(ctx,[['十六不搭',50]]),t=p.reduce((s,x)=>s+x.f,0);if(!best||t>best.total)best={pats:p,total:t,special:'十六不搭'}}
+  const qidui=findQidui(hand,openMelds,minggang,angang);if(qidui){const p=baseChips(ctx,[['嚦咕嚦咕',40]]),t=p.reduce((s,x)=>s+x.f,0);if(!best||t>best.total)best={pats:p,total:t,special:'嚦咕嚦咕'}}
+  const shisan=findShisan(hand,openMelds,minggang,angang);if(shisan){const p=baseChips(ctx,[['十三么',120]]),t=p.reduce((s,x)=>s+x.f,0);if(!best||t>best.total)best={pats:p,total:t,special:'十三么'}}
+  const slbt=findShiliubuta(hand,openMelds,minggang,angang);if(slbt){const p=baseChips(ctx,[['十六不搭',50]]),t=p.reduce((s,x)=>s+x.f,0);if(!best||t>best.total)best={pats:p,total:t,special:'十六不搭'}}
   const decomps=findAllDecomps(hand,openMelds);const nd=decomps.length;
   for(const d of decomps){const p=detectPats(d,openMelds,ctx),ap=applyExclusions(p);const tot=ap.reduce((s,x)=>s+x.f,0);if(!best||tot>best.total)best={pats:ap,total:tot,decomp:d,nd}}
   if(!best||best.total<=0){rb.innerHTML='<div class="res-fail"><div class="fail-msg">❌ 手牌無法組成有效胡牌</div><p class="fail-sub">17張牌無法排成「五副＋一對將」，請檢查手牌</p></div>';showRes();return}
@@ -382,6 +384,7 @@ function doCalc(){
   if(specials.has('yitaicao'))instItems.push({n:'一台草',v:`收各家 $${Math.floor(betAmt/2)}`});if(specials.has('yitaihua'))instItems.push({n:'一台花',v:`收各家 $${betAmt}`});
   if(specials.has('qiqiangyi'))instItems.push({n:'七搶一',v:`收該家 $${betAmt*6}`});if(specials.has('liangta'))instItems.push({n:'兩台花',v:`收各家 $${betAmt*8}`});
   if(specials.has('zhui'))instItems.push({n:'追牌（么九）',v:`付各家 $${betAmt}`});if(specials.has('zhuizhong'))instItems.push({n:'追牌（中張）',v:`付各家 $${betAmt*2}`});
+  if(specials.has('zhahu'))instItems.push({n:'詐糊',v:'罰160分'});
   if(specials.has('jcp'))instItems.push({n:'叫碰不碰',v:`付胡家 $${betAmt}`});
   rb.innerHTML=`<div class="res-banner"><div class="fan-big">${total}</div><div class="fan-lbl">番</div>${best.special?`<div class="multi-note">特殊牌型：${best.special}</div>`:''}${best.nd>1?`<div class="multi-note">共 ${best.nd} 種排列，顯示最高番數</div>`:''}</div>
     <div class="pat-sec"><div class="pat-hd">✅ 自動識別</div>
