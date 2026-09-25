@@ -261,7 +261,7 @@ function addMeldTile(id){
 }
 function removeMeld(i){openMelds.splice(i,1);renderMelds();renderPicker();renderHand();updateHandCountUI();updateBtn()}
 function renderMelds(){const box=document.getElementById('meldBox');if(!openMelds.length){box.innerHTML='<span style="font-size:.7rem;color:var(--muted)">尚無落地牌</span>';return}box.innerHTML=openMelds.map((m,i)=>`<div class="meld-tag"><span class="mb-lbl">${m.lbl}</span><div style="display:flex;gap:2px">${m.tiles.map(t=>miniT(t)).join('')}</div><button class="mb-del" onclick="removeMeld(${i})">✕</button></div>`).join('')}
-function addTile(id){if(addingMeld){addMeldTile(id);return}if(hand.length>=need())return;const c=getTotalCnts();if(c[id]>=4){toast('❌ 此牌已用盡4張');return}hand.push(id);render()}
+function addTile(id){if(addingMeld){addMeldTile(id);return}if(hand.length>=need())return;const c=getTotalCnts();if(c[id]>=4){toast('❌ 此牌已用盡4張');return}hand.push(id);if(hand.length===need()&&winIdx===null)winIdx=hand.length-1;render()}
 function removeTile(i){hand.splice(i,1);if(winIdx===i)winIdx=null;else if(winIdx!==null&&winIdx>i)winIdx--;render()}
 function delLast(){if(hand.length)removeTile(hand.length-1)}
 function clearHand(){hand=[];winIdx=null;render()}
